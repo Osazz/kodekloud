@@ -1,0 +1,38 @@
+During a recent security audit, the application security team of xFusionCorp Industries found security issues with the Apache web server on 
+Nautilus App Server 2 server in Stratos DC. They have listed several security issues that need to be fixed on this server. 
+Please apply the security settings below:
+
+
+a. On Nautilus App Server 2 it was identified that the Apache web server is exposing the version number. 
+    Ensure this server has the appropriate settings to hide the version number of the Apache web server.
+
+b. There is a website hosted under /var/www/html/news on App Server 2. It was detected that the directory /news 
+    lists all of its contents while browsing the URL. Disable the directory browser listing in Apache config.
+
+c. Also make sure to restart the Apache service after making the changes.
+
+
+Solution
+
+- Check status of apache server 
+    - sudo systemctl status httpd  # result show it inactive 
+    - sudo systemctl is-enabled httpd # result shows this is is not enabled 
+  Fixing apache server
+    - sudo systemctl enable httpd   # Enable the server
+    - sudo systemctl enable httpd   # Start server 
+    - sudo systemctl status httpd   # Shows server running 
+    
+  Fixing the version exposing setting 
+    - sudo vi /etc/httpd/conf/httpd.conf
+        # Add/Modify/Append the two line below 
+              ServerTokens Prod
+              ServerSignature Off 
+  N.B: We should restart here but we will try to fix the other problems first and restart once.
+  
+  Fixing directory browser listing apache config 
+    - sudo vi /etc/httpd/conf/httpd.conf
+        - Then find the line: Options Indexes FollowSymLinks
+        - Change that line to: Options FollowSymLinks
+    
+  Restart server 
+    - sudo systemctl restart httpd
