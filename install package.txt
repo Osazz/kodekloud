@@ -1,0 +1,12 @@
+As per new application requirements shared by the Nautilus project development team, serveral new packages need to be 
+installed on all app servers in Stratos Datacenter. Most of them are completed except for telnet.
+
+
+Therefore, install the telnet package on all app-servers.
+
+
+Solution: 
+
+- rpm -qa | grep telnet # check if telnet has been installed 
+- sudo yum install -y telnet  # Install telnet if it dosnt exist when you check above 
+- rpm -qa | grep telnet # Confirm it has been installed 
