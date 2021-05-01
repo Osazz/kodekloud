@@ -1,0 +1,85 @@
+The system admins team of xFusionCorp Industries needs to deploy a new application on App Server 3 in Stratos Datacenter. 
+They have some pre-requites to get ready that server for application deployment. Prepare the server as per requirements shared below:
+
+
+  - Install and configure nginx on App Server 3.
+
+  - On App Server 3 there is a self signed SSL certificate and key present at location /tmp/nautilus.crt and /tmp/nautilus.key. 
+    Move them to some appropriate location and deploy the same in Nginx.
+
+  - Create an index.html file with content Welcome! under Nginx document root.
+
+  - For final testing try to access the App Server 3 link (either hostname or IP) from jump host using curl command. For example curl -Ik https://<app-server-ip>/.
+
+
+SOLUTION
+
+1. Installing Nginx 
+    - sudo yum install epel-release
+    - sudo yum install nginx
+    - sudo systemctl start nginx
+    - sudo systemctl enable nginx
+    
+2. Moving Certificate to appropirate directory and changing nginx.conf file
+    - sudo mkdir /etc/pki/nginx/
+    - sudo mkdir /etc/pki/nginx/private/
+    - sudo mv /tmp/nautilus.crt /etc/pki/nginx/
+    - sudo mv /tmp/nautilus.key /etc/pki/nginx/private/ 
+    - cd /etc/pki/nginx/
+    - sudo chmod 777 nautilus.crt
+    - cd /etc/pki/nginx/private/
+    - sudo chmod 777 nautilus.key
+    - sudo vi /etc/nginx/nginx.conf
+          server {
+                    listen       80 default_server;
+                    listen       [::]:80 default_server;
+                    listen       443 ssl;  # Add this line
+                    server_name  172.16.238.12; # Add this line (this is you app server ip, In my case it was app server 3 )
+                    root         /usr/share/nginx/html;
+                    index        index.html # Add this line 
+                     
+                    ##################################
+                    ## Add the ssl value here ########
+                    ##################################
+                    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+                    ssl_prefer_server_ciphers on;
+                    ssl_ciphers ECDHE+RSAGCM:ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:!aNULL!eNull:!EXPORT:!DES:!3DES:!MD5:!DSS;
+                    ssl_certificate /usr/share/nginx/html/nautilus.crt;        
+                    ssl_certificate_key /usr/share/nginx/html/nautilus.key;
+                    
+                    # Load configuration files for the default server block.
+                    include /etc/nginx/default.d/*.conf;
+
+                    location / {
+                    }
+
+                    error_page 404 /404.html;
+                    location = /404.html {
+                    }
+
+                    error_page 500 502 503 504 /50x.html;
+                    location = /50x.html {
+                    }
+                }
+
+3. Creating index.html file 
+    - sudo unlink index.html
+    - sudo vi index.html
+        - Welcome # Add this to the file 
+
+N.B: Restart server now 
+  - sudo systemctl restart nginx
+
+4. Test 
+   
+  - thor@jump_host /$ curl -Ik https://172.16.238.12/
+      HTTP/1.1 200 OK
+      Server: nginx/1.16.1
+      Date: Fri, 30 Apr 2021 16:59:01 GMT
+      Content-Type: text/html
+      Content-Length: 9
+      Last-Modified: Fri, 30 Apr 2021 16:26:29 GMT
+      Connection: keep-alive
+      ETag: "608c2fb5-9"
+      Accept-Ranges: bytes
+
