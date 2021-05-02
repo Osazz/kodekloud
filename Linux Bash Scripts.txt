@@ -16,8 +16,7 @@ Solution:
   ####################################
   ## Manual steps before automating ##
   ####################################
-  - tar -czvf xfusioncorp_news.zip /var/www/html/news # archive the directory 
-  - mv xfusioncorp_news.zip /backup/   # Move the archive file to the backup directory
+  - zip -r /backup/xfusioncorp_news.zip /var/www/html/news # archive the directory 
   - ssh-keygen       # for creating new authentication key pairs for SSH.
   - ssh-copy-id clint@stbkp01        # Copy the new ssh auth pairs to the backup server so you can login without password 
         - During it process it ask for client password once and that is it 
@@ -30,8 +29,7 @@ Solution:
   - cd /scripts/
   - vi news_backup.sh
         #!/bin/bash
-        tar -czvf xfusioncorp_news.zip /var/www/html/news
-        mv xfusioncorp_news.zip /backup/
+        zip -r /backup/xfusioncorp_news.zip /var/www/html/news
         scp /backup/xfusioncorp_news.zip clint@stbkp01:/backup/
   - chmod +x news_backup.sh 
   
