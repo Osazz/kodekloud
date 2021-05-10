@@ -1,0 +1,34 @@
+xFusionCorp Industries has hosted several static websites on Nautilus Application Servers in Stratos DC. There are some confidential directories on document root that need to be password protected. Because they are using Apache for hosting the websites, the production support team has decided to use .htaccess with basic auth. There is a website that needs to be uploaded to /var/www/html/sysops on Nautilus App Server 1. However, we need to set up the authentication before that.
+
+
+Create /var/www/html/sysops direcotry if doesn't exist.
+
+Add a user kareem in htpasswd and set its password to GyQkFRVNr3.
+
+There is a file /tmp/index.html placed on Jump Server. Copy the same to new directory you created, please make sure default document root should remain /var/www/html. Also website should work on URL http://<app-server-hostname>:<port>/sysops
+
+
+SOLUTION
+- ssh to the app server 
+    1  ls /var/www/html/sysops   # Confirm that the direstory exist
+      2  mkdir /var/www/html/sysops # If doesnt exist create it
+      3  ls /var/www/html/sysops.  # confirm it was created 
+    4  cd /var/www/html/. # go to the default document root for apache
+    5  sudo vi .htaccess   # create .htaccess file and put the following in it 
+      ```
+            AuthType Basic
+            AuthName “Restricted Content”
+            AuthUserFile /etc/httpd/.htpasswd
+            Require valid-user
+       ```
+   6  sudo htpasswd -c /var/www/html/sysops/.htpasswd kareem   # Create kareem user and put password in sysops file 
+   7  sudo vi /etc/httpd/conf/httpd.conf # open this and change AllowOverride All (or None) to AllowOverride AuthConfig
+        Line 151 in the file 
+        
+   8  exit   # Leave you app server to jump server
+   9. scp /tmp/index.html tony@stapp01:/var/www/html/sysops/ # copy the index file to the sysops dir
+   10. ssh back to the app server 
+   13  sudo systemctl restart httpd  # restart the httpd service 
+   14  sudo curl http://localhost:8080 -u kareem. # Test your changes, this should ask you for Kareem's password 
+   
+   
