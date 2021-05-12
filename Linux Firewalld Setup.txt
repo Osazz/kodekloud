@@ -1,0 +1,73 @@
+To secure our Nautilus infrastructure in Stratos Datacenter we have decided to install and configure firewalld on all app servers. We have Apache and Nginx services running on these apps. Nginx is running as a reverse proxy server for Apache. We might have more robust firewall settings in the future, but for now we have decided to go with the given requirements listed below:
+
+
+a. Allow all incoming connections on Nginx port.
+
+b. Allow incoming connections from LB host only on Apache port and block for all others.
+
+c. All rules must be permanent.
+
+d. Zone should be public.
+
+e. If Apache or Nginx services aren't running already, please make sure to start them.
+
+
+Solution:
+
+-- Check is apache and nginx services is running 
+          -- sudo service httpd status # check apache is running
+          -- sudo service nginx status # check Nginx is running
+                  --- If any is not running start it with 
+                        sudo service <service name> start
+                        
+
+-- install firewalld
+    sudo yum install firewalld -y 
+    sudo systemctl start firewalld # start the service 
+    sudo systemctl enable firewalld # enable it to run on reboot
+    sudo firewall-cmd --get-default-zone # Check default zone Must be public 
+            --- if not public change zone using 
+                -- sudo firewall-cmd --zone=public 
+                
+                
+--- Check which port nginx is listening on 
+          -- cat /etc/nginx/nginx.conf | grep listen
+                        listen       8093 default_server       
+                        
+---  Allow incoming connection to Nginx
+    sudo firewall-cmd --permanent --zone=public --add-port=8093/tcp
+    sudo firewall-cmd --reload
+    sudo firewall-cmd --zone=public --list-ports
+---- check Apache port 
+    cat /etc/httpd/conf/httpd.conf | grep Listen
+          # Listen: Allows you to bind Apache to specific IP addresses and/or
+          # Change this to Listen on specific IP addresses as shown below to 
+          #Listen 12.34.56.78:80
+          Listen 6300
+--- Allow incoming connection from LB on Apache  
+       sudo firewall-cmd --permanent --zone=public --add-rich-rule='rule family=ipv4 source address=172.16.238.14 port port=6300 protocol=tcp accept'  # 6300 is              apache port and 172.16.238.14  is LB IP
+        
+        sudo firewall-cmd --reload
+        sudo firewall-cmd --zone=public --list-all
+        
+        
+        
+For other 2 servers, I put the script in a bash file 
+-- vi bash.sh create bash script 
+        #!/bin/bash
+        sudo service httpd status # check apache is running
+        sudo service nginx status # check Nginx is running
+        sudo yum install firewalld -y 
+        sudo systemctl start firewalld # start the service 
+        sudo systemctl enable firewalld # enable it to run on reboot
+        sudo firewall-cmd --get-default-zone # Check default zone Must be public 
+        cat /etc/nginx/nginx.conf | grep listen
+        sudo firewall-cmd --permanent --zone=public --add-port=8093/tcp
+        sudo firewall-cmd --reload
+        sudo firewall-cmd --zone=public --list-ports
+        cat /etc/httpd/conf/httpd.conf | grep Listen
+        sudo firewall-cmd --permanent --zone=public --add-rich-rule='rule family=ipv4 source address=172.16.238.14 port port=6300 protocol=tcp accept'         
+        sudo firewall-cmd --reload
+        sudo firewall-cmd --zone=public --list-all
+-- chmod +x bash.sh 
+-- sudo -u # use user password 
