@@ -1,0 +1,48 @@
+Solution:
+
+  ssh into the storage server 
+  Sudo su
+  yum install -y nfs-utils nfs-utils-lib
+  Edit the /etc/exports
+      vi /etc/exports
+      /opt 172.16.238.10(rw,sync,no_root_squash)
+      /opt 172.16.238.11(rw,sync,no_root_squash)
+      /opt 172.16.238.12(rw,sync,no_root_squash)
+  Enable, start and check status
+	    systemctl enable nfs-server && sudo systemctl start nfs-server && sudo systemctl status nfs-server
+
+  Check the export and mount configuration
+      exportfs  -av
+      sudo showmount -e ststor01
+
+  Install open ssh client
+	    yum install -y openssh-clients openssh
+
+  Now open another terminal and go to jump server
+  Copy index.html from jump server to storage server
+      scp /tmp/index.html natasha@ststor01:/tmp
+
+  Now, Back to storage server and copy index.html from /tmp to /opt folder
+    	cp /tmp/index.html /code
+
+
+
+  Now go to stapp01, stapp02, and stapp03 server and do the followings in every appserver
+
+  Set nfs in all appservers
+    	yum install -y nfs-utils nfs-utils-lib
+
+  Create the mentioned directory in the question and mount the nfs server on this newly created directory
+    	mkdir -p /var/www/nfsshare
+	    mount -t nfs 172.16.238.15:/opt /var/www/nfsshare
+
+  Enable, Start, and Show status
+
+	    systemctl enable nfs-server && systemctl start nfs-server && systemctl status nfs-server
+
+  Add the mount point permanently
+      echo "echo 172.16.238.15:/opt /var/www/nfsshare nfs defaults 0 0 > /etc/fstab" > /etc/fstab
+
+  Now check the /var/www/nfsshare directory in all app servers. You can find the index.html file which is originally located in storage server.
+      ls /var/www/nfsshare
+  
